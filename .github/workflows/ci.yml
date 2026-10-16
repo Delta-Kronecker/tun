@@ -88,6 +88,20 @@ jobs:
       - name: Build solution (library + tests)
         run: dotnet build Se7enTun.sln -c Release --no-restore
 
+      - name: Upload artifact (win-x64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Se7enTun-win-x64
+          path: Se7enTun/bin/Release/net8.0-windows10.0.19041.0/win-x64/
+          if-no-files-found: error
+
+      - name: Upload artifact (win-x86)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Se7enTun-win-x86
+          path: Se7enTun/bin/Release/net8.0-windows10.0.19041.0/win-x86/
+          if-no-files-found: error
+
   test:
     name: Unit tests
     runs-on: windows-2025
