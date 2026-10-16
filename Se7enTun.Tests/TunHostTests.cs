@@ -55,7 +55,7 @@ public sealed class TunHostTests
     }
 
     [Fact]
-    public void Stub_helpers_reconfigure_the_upstream()
+    public async Task Stub_helpers_reconfigure_the_upstream()
     {
         var host = new TunHost(new TunOptions { SocksPort = 1080 });
 
@@ -78,12 +78,12 @@ public sealed class TunHostTests
         }
         finally
         {
-            host.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            await host.DisposeAsync();
         }
     }
 
     [Fact]
-    public void Stub_helpers_are_refused_when_the_host_supplies_its_own_core()
+    public async Task Stub_helpers_are_refused_when_the_host_supplies_its_own_core()
     {
         var host = new TunHost(
             new ForeignTunnelCore(),
@@ -100,7 +100,7 @@ public sealed class TunHostTests
         }
         finally
         {
-            host.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            await host.DisposeAsync();
         }
     }
 

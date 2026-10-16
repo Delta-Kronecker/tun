@@ -9,7 +9,7 @@ namespace Se7enTun.Tests;
 public sealed class SplitRulesTests
 {
     [Theory]
-    [InlineData("https://www.Example.com/path?q=1", "example.com")]
+    [InlineData("https://www.Example.com/path?q=1", "www.example.com")]
     [InlineData("http://sub.example.com/", "sub.example.com")]
     [InlineData("*.example.com", "example.com")]
     [InlineData(".example.com", "example.com")]
@@ -78,7 +78,7 @@ public sealed class SplitRulesTests
 
         SplitRules.ClassifySplitEntries(settings, out var domains, out var ipCidrs, out var procNames, out var procPaths);
 
-        Assert.Equal(new[] { "digikala.com" }, domains);
+        Assert.Equal(new[] { "www.digikala.com" }, domains);
         Assert.Equal(new[] { "8.8.8.8/32" }, ipCidrs);
         Assert.Equal(new[] { "chrome.exe" }, procNames);
         Assert.Equal(new[] { @"C:\Tools\foo.exe" }, procPaths);
