@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>Se7enTun.Tests</RootNamespace>
+    <AssemblyName>Se7enTun.Tests</AssemblyName>
+
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <Platforms>x64;x86;AnyCPU</Platforms>
+    <IsPackable>false</IsPackable>
+
+    <NoWarn>$(NoWarn);WFAC010;NU1900</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Se7enTun\Se7enTun.csproj" />
+  </ItemGroup>
+
+</Project>

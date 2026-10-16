@@ -1,0 +1,37 @@
+# =====================================================================
+#  Se7en TUN - .gitignore
+# =====================================================================
+
+# ---- Build output ----
+[Bb]in/
+[Oo]bj/
+artifacts/
+publish/
+dist/
+build_staging/
+*.binlog
+TestResults/
+Output/
+
+# ---- Distribution & archive artifacts ----
+*.zip
+*.7z
+*.tar.gz
+*.msi
+
+# ---- Secrets / credentials (NEVER commit) ----
+BuildSecrets.g.cs
+*.plaintext.json
+secrets.json
+*.pem
+*.key
+
+# ---- IDE / agent state ----
+.vs/
+*.user
+*.suo
+.idea/
+.vscode/
+AGENTS.md
+.claude/
+.cursorrules

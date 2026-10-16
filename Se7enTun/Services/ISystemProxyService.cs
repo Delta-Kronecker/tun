@@ -1,0 +1,12 @@
+namespace Se7enPro.Services;
+
+public interface ISystemProxyService
+{
+    void Set(int httpProxyPort);
+
+    void Clear();
+
+    void RestoreIfCrashed();
+
+        bool IsApplied { get; }
+}

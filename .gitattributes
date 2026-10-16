@@ -1,0 +1,36 @@
+# Normalize line endings: text is stored as LF in the repo and checked
+# out with native endings; everything below marked "binary" is never
+# touched, diffed or merged.
+
+* text=auto
+
+# ---- Text sources ----
+*.cs     text diff=csharp
+*.xaml   text
+*.axaml  text
+*.csproj text
+*.sln    text eol=crlf
+*.json   text
+*.md     text
+*.yml    text eol=lf
+*.ps1    text eol=crlf
+*.py     text eol=lf
+*.iss    text eol=crlf
+*.config text
+*.manifest text
+*.txt    text
+
+# ---- Binaries ----
+*.exe  binary
+*.dll  binary
+*.ico  binary
+*.png  binary
+*.jpg  binary
+*.bin  binary
+*.dat  binary
+*.eot  binary
+*.ttf  binary
+*.woff binary
+*.woff2 binary
+*.7z   binary
+*.zip  binary

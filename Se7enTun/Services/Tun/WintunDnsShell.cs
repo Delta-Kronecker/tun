@@ -1,0 +1,92 @@
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Runtime.Versioning;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Se7enPro.Services;
+
+[SupportedOSPlatform("windows")]
+internal static class WintunDnsShell
+{
+    public static async Task SetAdapterDnsAsync(string adapterName, string serverIp)
+    {
+        await RunAsync("ipv4", "set", adapterName, serverIp);
+        try { await RunAsync("ipv6", "set", adapterName, serverIp); }
+        catch {  }
+    }
+
+    public static async Task ClearAdapterDnsAsync(string adapterName)
+    {
+        try { await RunAsync("ipv4", "delete", adapterName, null); } catch { }
+        try { await RunAsync("ipv6", "delete", adapterName, null); } catch { }
+    }
+
+    private static async Task RunAsync(string family, string verb, string adapterName, string? serverIp)
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = "netsh.exe",
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+        };
+        psi.ArgumentList.Add("interface");
+        psi.ArgumentList.Add(family);
+        if (verb == "set")
+        {
+            psi.ArgumentList.Add("set");
+            psi.ArgumentList.Add("dnsservers");
+            psi.ArgumentList.Add($"name={adapterName}");
+            psi.ArgumentList.Add("source=static");
+            psi.ArgumentList.Add($"address={serverIp}");
+            psi.ArgumentList.Add("register=primary");
+            psi.ArgumentList.Add("validate=no");
+        }
+        else
+        {
+            psi.ArgumentList.Add("delete");
+            psi.ArgumentList.Add("dnsservers");
+            psi.ArgumentList.Add($"name={adapterName}");
+            psi.ArgumentList.Add("all");
+        }
+
+        
+        
+        psi.FileName = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.System), "netsh.exe");
+
+        using var p = Process.Start(psi);
+        if (p is null) throw new InvalidOperationException("Could not start netsh.");
+
+        
+        
+        
+        var stdout = p.StandardOutput.ReadToEndAsync();
+        var stderr = p.StandardError.ReadToEndAsync();
+
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        try { await p.WaitForExitAsync(timeout.Token); }
+        catch (OperationCanceledException)
+        {
+            try { p.Kill(entireProcessTree: true); } catch { }
+            throw new TimeoutException($"netsh {family} {verb} dnsservers timed out");
+        }
+
+        
+        
+        
+        
+        
+        
+        
+        if (p.ExitCode != 0)
+        {
+            throw new InvalidOperationException(
+                $"netsh {family} {verb} dnsservers failed (exit {p.ExitCode}): " +
+                $"{stderr.GetAwaiter().GetResult().Trim()} {stdout.GetAwaiter().GetResult().Trim()}".Trim());
+        }
+    }
+}

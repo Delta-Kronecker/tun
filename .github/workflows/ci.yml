@@ -1,0 +1,108 @@
+name: CI
+
+# Compiles and tests every push and pull request WITHOUT access to any secret.
+# Mirrors the Se7en Pro workflow (windows-2025, .NET 8, -warnaserror), plus a
+# unit-test job for the extracted TUN library. The elevated Wintun/tun2socks
+# integration harness is deliberately not run here: it needs a real adapter,
+# Administrator rights and a live SOCKS5 upstream on an interactive machine.
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  hygiene:
+    name: No credential material tracked
+    runs-on: windows-2025
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Scan tracked files for secrets
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tracked = git ls-files
+          $bad = @()
+
+          foreach ($p in $tracked) {
+            if ($p -match 'BuildSecrets\.g\.cs$')         { $bad += $p }
+            if ($p -match '\.plaintext\.json$')            { $bad += $p }
+            if ($p -match 'server_entries\.(bin|txt)$')    { $bad += $p }
+            if ($p -match '(^|/)(id_rsa|id_ed25519)(\.)?$'){ $bad += $p }
+          }
+
+          $text = $tracked | Where-Object {
+            $_ -match '\.(cs|csproj|sln|md|yml|yaml|json|xml|config|ps1|txt|xaml|xaml\.cs)$'
+          }
+          foreach ($p in $text) {
+            $hits = Select-String -Path $p -ErrorAction SilentlyContinue `
+              -Pattern 'ghp_[A-Za-z0-9]{20,}', 'github_pat_[A-Za-z0-9_]{20,}', '-----BEGIN [A-Z ]*PRIVATE KEY-----'
+            if ($hits) { $bad += "$p (credential pattern)" }
+          }
+
+          if ($bad.Count) {
+            Write-Host 'Sensitive material is tracked:' -ForegroundColor Red
+            $bad | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+            exit 1
+          }
+          Write-Host "No credential material tracked ($($tracked.Count) files)."
+
+  build:
+    name: Build (win-x64, win-x86)
+    runs-on: windows-2025
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore Se7enTun.sln
+
+      - name: Build win-x64 (library, warnings are errors)
+        run: dotnet build Se7enTun/Se7enTun.csproj -c Release -r win-x64 --no-restore --self-contained false -warnaserror
+
+      - name: Build win-x86 (library, warnings are errors)
+        run: dotnet build Se7enTun/Se7enTun.csproj -c Release -r win-x86 --no-restore --self-contained false -warnaserror
+
+      - name: Build solution (library + tests)
+        run: dotnet build Se7enTun.sln -c Release --no-restore
+
+  test:
+    name: Unit tests
+    runs-on: windows-2025
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Test
+        run: dotnet test Se7enTun.Tests/Se7enTun.Tests.csproj -c Release --logger "console;verbosity=normal"
